@@ -44,20 +44,9 @@ RUN UZS=$(find /Unreal/Maps/ -type f -name '*.uz') && \
         /Unreal/System${SYSTEM_SUFFIX}/ucc-bin decompress "$uz"; \
     done
 
+RUN find /Unreal/Maps/ -type f -name '*.uz' | xargs rm
+
 RUN mv /root/.utpg/System/*.unr /Unreal/Maps/
-
-##############################
-
-FROM ubuntu:24.04
-
-ARG SYSTEM_SUFFIX=ARM64
-
-RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime
-
-COPY --from=builder /Unreal /Unreal
-COPY --from=builder /root/.utpg /root/.utpg
-COPY --from=builder /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
-COPY --from=builder /storage/System/ /Unreal/System/
 
 WORKDIR /root/.utpg/System/
 RUN sed -i 's/^AdminPassword=.*/AdminPassword=qwerty123/' UnrealTournament.ini
@@ -95,10 +84,37 @@ bFixFeignDeathZoomBug=True' UnrealTournament.ini
 
 RUN sed -i '/^\[Engine\.GameEngine\]/a  \
 ServerPackages=MapVoteLA13' UnrealTournament.ini
+##############################
+
+FROM ubuntu:24.04
+
+ARG SYSTEM_SUFFIX=ARM64
+ARG ARCH=aarch64
+
+ENV PORT=7777
+ENV ADMIN_PASSWORD=qwerty123
+ENV GAME_PASSWORD=
+ENV MAP=DM-Barricade.unr
+ENV MUTATORS=
+ENV MAP_AUTO_CHANGE=True
+ENV SERVER_NAME="UT99 vasylchenko.me"
+ENV FRAG_LIMIT=10
+
+RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+
+COPY --from=builder /Unreal /Unreal
+COPY --from=builder /root/.utpg /root/.utpg
+COPY --from=builder /usr/lib/${ARCH}-linux-gnu /usr/lib/${ARCH}-linux-gnu
+COPY --from=builder /storage/System/ /Unreal/System/
 
 # Set Working Directory
 WORKDIR /Unreal/System${SYSTEM_SUFFIX}
 
+COPY ./init.sh /Unreal/System${SYSTEM_SUFFIX}/
+
+RUN chmod +x init.sh
+
 EXPOSE 7777/udp 7778/udp
 # Define ENTRYPOINT
-ENTRYPOINT ["./ucc-bin", "server", "DM-Barricade.unr?Game=Botpack.DeathMatchPlus?Mutator=MapVoteLA13.BDBMapVote", "ini=/root/.utpg/System/UnrealTournament.ini", "-nohomedir"]
+#ENTRYPOINT ["./ucc-bin", "server", "DM-Barricade.unr?Game=Botpack.DeathMatchPlus?Mutator=MapVoteLA13.BDBMapVote", "ini=/root/.utpg/System/UnrealTournament.ini", "-nohomedir"]
+ENTRYPOINT ["./init.sh"]

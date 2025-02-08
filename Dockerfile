@@ -1,13 +1,19 @@
 FROM ubuntu:24.04 AS builder
 
+# Specifies the path to the ISO file to be used.
 ARG ISO=https://archive.org/download/ut-goty/UT_GOTY_CD1.iso
+# Specifies the path to the patch version file.
 ARG PATCH=https://github.com/OldUnreal/UnrealTournamentPatches/releases/download/v469e-rc4/OldUnreal-UTPatch469e-Linux-arm64.tar.bz2
+# List of files and directories within the ISO file to be ignored (filtered) during the unpacking process.
 ARG SKIP=https://github.com/OldUnreal/FullGameInstallers/raw/refs/heads/master/Windows/Installer/skip.txt
+# URL to the MapVote mutator that will be enabled by default, allowing players to vote for the next map.
 ARG MAPVOTE=https://unreal-archive-files.eu-central-1.linodeobjects.com/Unreal%20Tournament/Mutators/M/8/8/c441c8/MapvoteLA13.zip
+# Suffix of the system folder. For example, for ARM, it is "SystemARM64", etc.
 ARG SYSTEM_SUFFIX=ARM64
 
 RUN mkdir storage
 
+# Downloading files required for building the image.
 ADD ${ISO} /storage/
 ADD ${PATCH} /storage/
 ADD ${SKIP} /storage/
@@ -15,20 +21,22 @@ ADD ${MAPVOTE} /storage/
 
 RUN mkdir Unreal && cd Unreal/
 
+# Specifies the time zone required for installing libsdl2-2.0-0.
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime
 
-# Install Dependencies
+# Installs dependencies for unpacking archives and graphics libraries required to run the game.
 RUN apt-get update && apt-get install -y \
     bzip2 \
     p7zip-full \
     libsdl2-2.0-0
 
+# Unpacks the contents of the ISO file, using a skip list to filter only the required files.
 RUN 7z x -aoa -o/Unreal/ -x@/storage/$(basename ${SKIP}) /storage/$(basename ${ISO})
-
+# Unpacks the MapVote mutator files.
 RUN 7z x -aoa -o/storage/ /storage/$(basename ${MAPVOTE})
-
+# Unpacks the patch file.
 RUN tar vxf /storage/$(basename ${PATCH}) -C /Unreal/
-
+# Prints the result to the console.
 RUN ls -lah /storage/
 
 # Set Environment Variables (if necessary)
@@ -44,10 +52,13 @@ RUN UZS=$(find /Unreal/Maps/ -type f -name '*.uz') && \
         /Unreal/System${SYSTEM_SUFFIX}/ucc-bin decompress "$uz"; \
     done
 
+# Removes compressed files after decompression.
 RUN find /Unreal/Maps/ -type f -name '*.uz' | xargs rm
 
+# Copies decompressed files into the System folder instead of the user folder.
 RUN mv /root/.utpg/System/*.unr /Unreal/Maps/
 
+# Updates default properties.
 WORKDIR /root/.utpg/System/
 RUN sed -i 's/^AdminPassword=.*/AdminPassword=qwerty123/' UnrealTournament.ini
 RUN sed -i 's/^ServerName=.*/ServerName=vasylchenko.me UT Server/' UnrealTournament.ini
@@ -86,6 +97,7 @@ RUN sed -i '/^\[Engine\.GameEngine\]/a  \
 ServerPackages=MapVoteLA13' UnrealTournament.ini
 ##############################
 
+# Uses a new image to avoid storing unnecessary libraries and data.
 FROM ubuntu:24.04
 
 ARG SYSTEM_SUFFIX=ARM64
@@ -104,6 +116,7 @@ ENV APPEND_PROPS=""
 
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime
 
+# Copies data from the previous image.
 COPY --from=builder /Unreal /Unreal
 COPY --from=builder /root/.utpg /root/.utpg
 COPY --from=builder /usr/lib/${ARCH}-linux-gnu /usr/lib/${ARCH}-linux-gnu

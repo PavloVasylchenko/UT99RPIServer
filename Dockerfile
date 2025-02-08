@@ -64,14 +64,15 @@ RUN sed -i 's/^AdminPassword=.*/AdminPassword=qwerty123/' UnrealTournament.ini
 RUN sed -i 's/^ServerName=.*/ServerName=vasylchenko.me UT Server/' UnrealTournament.ini
 RUN sed -i 's/^ShortName=.*/ShortName=vasylchenko.me/' UnrealTournament.ini
 RUN sed -i 's/^Difficulty=.*/Difficulty=5/' UnrealTournament.ini
+RUN sed -i 's/^Difficulty=.*/Difficulty=5/' /Unreal/SystemARM64/User.ini
 RUN sed -i 's/^bEnabled=.*/bEnabled=True/' UnrealTournament.ini
 
 RUN sed -i '/^\[Botpack\.DeathMatchPlus\]/a  \
 BotSkill=5\n\
 bNoviceMode=False\n\
-MinPlayers=5\n\
+MinPlayers=6\n\
 AirControl=0.350000\n\
-FragLimit=10\n\
+FragLimit=30\n\
 TimeLimit=0\n\
 bChangeLevels=True\n\
 bMegaSpeed=False\n\
@@ -95,6 +96,13 @@ bFixFeignDeathZoomBug=True' UnrealTournament.ini
 
 RUN sed -i '/^\[Engine\.GameEngine\]/a  \
 ServerPackages=MapVoteLA13' UnrealTournament.ini
+
+RUN echo "\n\
+[IpServer.UdpServerUplink]\n\
+DoUplink=True\n\
+MasterServerAddress=master.333networks.com\n\
+MasterServerPort=27900\n\
+" >> UnrealTournament.ini
 ##############################
 
 # Uses a new image to avoid storing unnecessary libraries and data.
@@ -110,7 +118,7 @@ ENV MAP=DM-Barricade.unr
 ENV MUTATORS=""
 ENV MAP_AUTO_CHANGE=True
 ENV SERVER_NAME="UT99 vasylchenko.me"
-ENV FRAG_LIMIT=10
+ENV FRAG_LIMIT=30
 ENV REPLACE_PROPS=""
 ENV APPEND_PROPS=""
 

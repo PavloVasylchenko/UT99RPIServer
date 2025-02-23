@@ -2,7 +2,7 @@
 
 #TARGET_FILE="${1:-}"
 
-TARGET_FILE="/root/.utpg/System/UnrealTournament.ini"
+TARGET_FILE="./System/UnrealTournament.ini"
 
 echo "Replacing port by $PORT"
 sed -i "s/^Port=.*/Port=$PORT/" "$TARGET_FILE"
@@ -53,4 +53,9 @@ if [[ -n "${APPEND_PROPS:-}" ]]; then
 fi
 
 echo "Starting Server on port $PORT"
-./ucc-bin server "$MAP?Game=Botpack.DeathMatchPlus?Mutator=MapVoteLA13.BDBMapVote" ini=/root/.utpg/System/UnrealTournament.ini -nohomedir
+. "$(pwd)/unreal.env"
+echo " Loading props $(pwd)/unreal.env"
+echo "System folder is $SYSTEM_FOLDER"
+export LD_LIBRARY_PATH="$(pwd)/libs:$(pwd)/libs/pulseaudio"
+echo "Running ./$SYSTEM_FOLDER/ucc-bin server \"$MAP?Game=Botpack.DeathMatchPlus?Mutator=MapVoteLA13.BDBMapVote,relics.RelicStrength,relics.RelicSpeed,relics.RelicRegen,relics.RelicRedemption,relics.RelicDefense,relics.RelicDeath\" ini=../System/UnrealTournament.ini userini=../System/User.ini -nohomedir"
+./$SYSTEM_FOLDER/ucc-bin server "$MAP?Game=Botpack.DeathMatchPlus?Mutator=MapVoteLA13.BDBMapVote,relics.RelicStrength,relics.RelicSpeed,relics.RelicRegen,relics.RelicRedemption,relics.RelicDefense,relics.RelicDeath" ini=../System/UnrealTournament.ini userini=../System/User.ini -nohomedir

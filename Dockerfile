@@ -130,6 +130,10 @@ RUN find ./Maps/ -type f -name '*.uz' | xargs rm
 
 ############################################# SET PROPERTY FILE VALUES ###############################################################################
 # Set Working Directory
+
+RUN . ${UNREAL}/unreal.env && \
+    mv ${UNREAL}/$SYSTEM_FOLDER/UnrealTournament.ini ${UNREAL}/System/
+
 WORKDIR ${UNREAL}/System
 
 RUN sed -i 's/^AdminPassword=.*/AdminPassword=qwerty123/' UnrealTournament.ini

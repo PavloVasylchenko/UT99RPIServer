@@ -43,10 +43,21 @@ RUN ls -lah /storage/
 ENV DEBIAN_FRONTEND=noninteractive
 ############################################# SYSTEM FOLDER ##########################################################################################
 WORKDIR ${UNREAL}
-RUN echo "ARCH=$(uname -m)" > unreal.env && echo "SYSTEM_FOLDER=$( [ $(uname -m) = 'x86_64' ] && echo 'System64' || [ $(uname -m) = 'aarch64' ] && echo 'SystemARM64' || echo 'System' )" >> unreal.env
+RUN ls ${UNREAL}
+# Create env variables with folder prefixes and suffixes
+RUN echo "ARCH=$(uname -m)" > unreal.env &&  \
+    ( [ "$(uname -m)" = 'x86_64' ] && echo 'SYSTEM_FOLDER=System64' >> unreal.env ) || \
+    ( [ "$(uname -m)" = 'aarch64' ] && echo 'SYSTEM_FOLDER=SystemARM64' >> unreal.env )
+
+RUN cat ${UNREAL}/unreal.env
+
+# Copy libraries needed to start the game
 RUN . $(pwd)/unreal.env && \
     mkdir libs && \
     cp -r /usr/lib/$(uname -m)-linux-gnu/* ${UNREAL}/libs/
+
+RUN ls ${UNREAL}
+
 
 # List of required libraries, we copy just all available to make things simpler
 

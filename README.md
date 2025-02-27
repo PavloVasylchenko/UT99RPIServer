@@ -4,7 +4,7 @@ Docker image for Unreal Tournament 99 Game Server for Raspberry Pi
 Depending on platform releases can be found here:
 https://github.com/OldUnreal/UnrealTournamentPatches/releases/
 
-# Build image
+# Build image Raspberry Pi or arm
 
 ```
 docker build -t ut99:latest .
@@ -21,10 +21,14 @@ docker build -t ut99:latest \
 
 # Run Server
 ```
-docker run -it --rm -p 7777:7777/udp -p 7778:7778/udp ut99
-docker run -it --rm -p 7777:7777/udp -p 7778:7778/udp -e ADMIN_PASSWORD=qwerty123 ut99
-docker run -it --rm -p 7777:7777/udp -p 7778:7778/udp -e MAP="DM-Fractal.unr" -e FRAG_LIMIT=15 ut99
-docker run -it --rm -p 8888:8888/udp -p 8889:8889/udp -e PORT=8888 ut99
+# Default run
+docker run -d -p 7777:7777/udp -p 7778:7778/udp ut99
+# Default + Web Admin on port 8080
+docker run -d -p 7777:7777/udp -p 7778:7778/udp -p 8080:8080 -e ADMIN_PASSWORD=qwerty123 ut99
+# Default + DM-Fractal map
+docker run -d -p 7777:7777/udp -p 7778:7778/udp -e MAP="DM-Fractal.unr" -e FRAG_LIMIT=15 ut99
+# Default + Different, 8888 port
+docker run -d -p 8888:8888/udp -p 8889:8889/udp -e PORT=8888 ut99
 ...
 ENV VARIABLES:
 PORT=7777
